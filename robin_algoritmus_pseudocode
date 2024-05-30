@@ -1,0 +1,41 @@
+class Process:
+    name
+    burstTime
+    startTime
+endClass
+
+class ProcessQuantum:
+    process
+    quantum
+endClass
+
+prozesse <- []
+
+queue <- prozesse.copy()
+pQuantums <- []
+current_time <- 0
+
+SOLANGE queue.size() > 0
+    prozess <- queue.pop(0)
+
+    WENN prozess.startTime > current_time
+        queue.append(prozess)
+        continue
+    ENDE WENN
+
+    // execute process
+    WENN prozess.burstTime <= quantum
+        pq <- new ProcessQuantum(prozess, prozess.burstTime)
+        prozess.burstTime <- 0
+    SONST
+        pq <- new ProcessQuantum(prozess, quantum)
+        prozess.burstTime <- prozess.burstTime - quantum
+    ENDE WENN
+
+    pQuantums.append(pq)
+    current_time <- current_time + pq.quantum
+
+    WENN prozess.burstTime > 0
+        queue.append(prozess)
+    ENDE WENN
+ENDE SOLANGE
