@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 public class InteractiveGUI extends JFrame {
 
+    public int ab = 1;
     public enum HorizontalAlign {
         LEFT,
         CENTER,
@@ -51,6 +52,7 @@ public class InteractiveGUI extends JFrame {
         final int queueEndY = queueStartY+75;
 
         final int progressStartX = paddingX;
+        
         final int progressEndX = windowWidth-paddingX;
         final int progressStartY = queueEndY+40;
         final int progressEndY = windowHeight-paddingY;
@@ -61,7 +63,6 @@ public class InteractiveGUI extends JFrame {
         Button resetButton = new Button("Reset");
         Button randomizeColorsButton = new Button("Randomize Colors");
 
-        Timer colorRandomizer;
         /**
          * Panel to display the process info
          */
@@ -95,12 +96,6 @@ public class InteractiveGUI extends JFrame {
                 this.repaint();
             });
 
-            colorRandomizer = new Timer(50, e -> {
-                robin.randomizeColors();
-                this.repaint();
-            });
-
-
             addProcessButton.setBounds(windowWidth-paddingX-150, progressStartY-23, 150, 20);
             addProcessButton.addActionListener(e -> {
                 Process p = new Process("P" + (robin.processList.size()+1), 5, robin.getCurrentTime());
@@ -110,11 +105,8 @@ public class InteractiveGUI extends JFrame {
 
             randomizeColorsButton.setBounds(windowWidth-paddingX-300, progressStartY-23, 150, 20);
             randomizeColorsButton.addActionListener(e -> {
-                if (colorRandomizer.isRunning()) {
-                    colorRandomizer.stop();
-                } else {
-                    colorRandomizer.start();
-                }
+                robin.randomizeColors();
+                this.repaint();
             });
             
             this.add(addProcessButton);
@@ -197,7 +189,7 @@ public class InteractiveGUI extends JFrame {
             g2d.fillRect(startX+1, startY+1, totalWidth-1, 30);
             g2d.setColor(Color.BLACK);
             int barHeight = 25;
-            drawStringAdvanced(g2d,  "<<<<    " + totalBurstTime + " units total execution time    >>>>", new Rectangle(startX, startY, totalWidth, barHeight), HorizontalAlign.CENTER, VerticalAlign.CENTER, g2d.getFont().deriveFont(Font.BOLD, 16f));
+            drawStringAdvanced(g2d,  "<<<<    " + totalBurstTime + " units insgesamt    >>>>", new Rectangle(startX, startY, totalWidth, barHeight), HorizontalAlign.CENTER, VerticalAlign.CENTER, g2d.getFont().deriveFont(Font.BOLD, 16f));
             startY += barHeight;
             height -= barHeight;
 
@@ -217,9 +209,11 @@ public class InteractiveGUI extends JFrame {
                 g2d.setColor(Color.BLACK);
 
                 Rectangle bounds = new Rectangle(x, startY+height/4, width, height/2);
+                Rectangle bounds2 = new Rectangle(bounds.x, bounds.y+bounds.height, width, height/6);
                 drawStringAdvanced(g2d, p.getName(), bounds, HorizontalAlign.CENTER, VerticalAlign.TOP, g2d.getFont());
                 drawStringAdvanced(g2d, p.getBurstTimeOriginal() + "u (" + round(ratio*100, 1) + "%)", bounds, HorizontalAlign.CENTER, VerticalAlign.CENTER, g2d.getFont());
                 drawStringAdvanced(g2d, p.getStartTime() + "u delay", bounds, HorizontalAlign.CENTER, VerticalAlign.BOTTOM, g2d.getFont());
+                drawStringAdvanced(g2d, p.isDone() ? "Fertig" : "Laufend", bounds2, HorizontalAlign.CENTER, VerticalAlign.CENTER, g2d.getFont());
                 x += width;
             }
 
@@ -240,7 +234,7 @@ public class InteractiveGUI extends JFrame {
         @SuppressWarnings("SameParameterValue")
         void drawProcessQueue(Graphics2D g2d, int startX, int startY, int endX, int endY) {
             g2d.setColor(Color.BLACK);
-            drawStringAdvanced(g2d, "Process queue", new Rectangle(startX, startY-25, endX, 20), HorizontalAlign.CENTER, VerticalAlign.CENTER, g2d.getFont().deriveFont(Font.BOLD, 20f));
+            drawStringAdvanced(g2d, "Prozess Warteschlange", new Rectangle(startX, startY-25, endX, 20), HorizontalAlign.CENTER, VerticalAlign.CENTER, g2d.getFont().deriveFont(Font.BOLD, 20f));
 
             int totalBurstTimeInQueue = robin.processQueue.stream().mapToInt(p -> Math.min(p.getBurstTime(), timeQuantum)).sum();
             int totalWidth = endX - startX;
@@ -473,8 +467,6 @@ public class InteractiveGUI extends JFrame {
         this.setSize(windowWidth+xWindowSpacing, windowHeight+yWindowSpacing);
 
         this.setTitle("Round Robin");
-        this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("skz logo.png")));
-
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Add the mouse position label to the bottom right of the frame
@@ -493,5 +485,9 @@ public class InteractiveGUI extends JFrame {
                 mousePositionLabel.setText("Mouse Position: X=" + e.getX() + ", Y=" + e.getY());
             }
         });
+    }
+
+    public static void main(String[] args) {
+        new InteractiveGUI();
     }
 }
